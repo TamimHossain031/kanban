@@ -1,0 +1,79 @@
+generator client {
+  provider      = "prisma-client-js"
+  // "native" for local dev; the musl target is what runs in the Alpine image.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BoardRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  memberships  BoardMember[]
+  createdTasks Task[]        @relation("TaskCreator")
+}
+
+model Board {
+  id        String        @id @default(uuid())
+  title     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  members   BoardMember[]
+  columns   Column[]
+}
+
+model BoardMember {
+  id      String    @id @default(uuid())
+  boardId String
+  userId  String
+  role    BoardRole @default(VIEWER)
+  addedAt DateTime  @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId]) // one membership per user per board
+  @@index([userId]) // "list my boards" is driven from here
+}
+
+model Column {
+  id       String @id @default(uuid())
+  boardId  String
+  title    String
+  position String // fractional index
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@unique([boardId, position])
+  @@index([boardId])
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  columnId    String
+  title       String
+  description String?
+  position    String
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  column    Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([columnId, position]) // DB-level guarantee: no two tasks share a slot
+  @@index([columnId, position]) // powers ORDER BY position without a sort
+}

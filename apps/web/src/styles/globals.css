@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Blueprint design tokens ──────────────────────────────────────── */
+:root {
+  --canvas: #edf0f4; /* cool paper */
+  --surface: #ffffff; /* cards, lanes */
+  --rule: #d3dae3; /* hairlines, lane dividers */
+  --ink: #17212d; /* primary text */
+  --ink-muted: #5b6b7c; /* meta, counts */
+  --accent: #2f5dff; /* blueprint ink — focus, active drop target, CTA */
+  --accent-wash: #e8edff;
+
+  /* semantic spines only — not decoration */
+  --spine-urgent: #d6455b;
+  --spine-normal: #2f5dff;
+  --spine-idea: #6e7a8a;
+}
+
+[data-theme='dark'] {
+  --canvas: #121821;
+  --surface: #1a222e;
+  --rule: #2a3542;
+  --ink: #e6ecf3;
+  --ink-muted: #93a1b1;
+  --accent: #7fa0ff;
+  --accent-wash: #23304d;
+
+  --spine-urgent: #e06b7e;
+  --spine-normal: #7fa0ff;
+  --spine-idea: #8b97a6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-instrument), system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The one bold move: a faint 8px graph-paper grid on the canvas.
+   Reads as a drafting surface instantly, costs no JS. */
+.graph-paper {
+  background-color: var(--canvas);
+  background-image:
+    linear-gradient(to right, var(--rule) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule) 1px, transparent 1px);
+  background-size: 8px 8px;
+  /* grid at ~40% via a soft blend over the canvas */
+  background-blend-mode: soft-light;
+}
+
+/* Tabular numerals so column counts don't jitter as tasks move. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus ring — accent, visible, consistent. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Thin, quiet scrollbars inside lanes. */
+.lane-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.lane-scroll::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 4px;
+}
